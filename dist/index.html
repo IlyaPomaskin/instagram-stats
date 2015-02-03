@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Instagram stats</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <script id="stats-row-template" type="text/xhtml">
+            <tr>
+                <td><%= key %></td>
+                <td><pre><%= value %></pre></td>
+            </tr>
+        </script>
+        <div id="auth-header" class="hidden">
+            <h1>Instagram stats</h1>
+            <a class="btn btn-primary" id="auth-url" href="#" role="button">Authorization</a>
+        </div>
+        <div id="stats-body" class="hidden">
+            <a class="btn btn-primary" id="mining-toggle" href="#" role="button">Start mining</a>
+            <table id="stats-table" class="table table-striped">
+                <thead>
+                <tr>
+                    <td>Stat name</td>
+                    <td>Stat value</td>
+                </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="bundle.js"></script>
+</body>
+</html>
