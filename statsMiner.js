@@ -49,7 +49,7 @@ var StatsMiner = function (options) {
         'postsByHour': function (mediaArray) {
             return _.countBy(mediaArray, function (media) {
                 var date = new Date(media.created_time * 1000);
-                return ('0' + date.getHours()).slice(-2);
+                return date.getHours();
             });
         },
         'postsByDayOfWeek': function (mediaArray) {
@@ -81,6 +81,24 @@ var StatsMiner = function (options) {
                     }, 0);
                 })
                 .value();
+        },
+        'firstMedia': function (mediaArray) {
+            return _.min(mediaArray, function (media) {
+                return media.created_time;
+            });
+        },
+        'lastMedia': function (mediaArray) {
+            return _.max(mediaArray, function (media) {
+                return media.created_time;
+            });
+        },
+        'tags': function (mediaArray) {
+            return _(mediaArray).chain()
+                .pluck('tags')
+                .flatten()
+                .compact()
+                .countBy()
+                .value()
         }
     };
 
@@ -93,6 +111,16 @@ var StatsMiner = function (options) {
         'mostCommented': function (accumStatsValue, statsValue) {
             return _.max([accumStatsValue, statsValue], function (media) {
                 return media && media.comments && media.comments.count;
+            });
+        },
+        'firstMedia': function (accumStatsValue, statsValue) {
+            return _.min([accumStatsValue, statsValue], function (media) {
+                return media && media.created_time;
+            });
+        },
+        'lastMedia': function (accumStatsValue, statsValue) {
+            return _.max([accumStatsValue, statsValue], function (media) {
+                return media && media.created_time;
             });
         }
     };
@@ -153,6 +181,7 @@ var StatsMiner = function (options) {
 
     this.mining = function (options) {
         options = options || {};
+        options = _.merge(options, this.options.fetchFunctionOptions);
         this.options.fetchFunction(options, this.mediaFetchCallback.bind(this));
     }.bind(this);
 };
