@@ -9939,7 +9939,7 @@ return jQuery;
 (function (global){
 /**
  * @license
- * lodash 3.0.1 (Custom Build) <https://lodash.com/>
+ * lodash 3.1.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern -d -o ./index.js`
  * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
  * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
@@ -9952,7 +9952,7 @@ return jQuery;
   var undefined;
 
   /** Used as the semantic version number. */
-  var VERSION = '3.0.1';
+  var VERSION = '3.1.0';
 
   /** Used to compose bitmasks for wrapper metadata. */
   var BIND_FLAG = 1,
@@ -10708,7 +10708,7 @@ return jQuery;
 
     /**
      * Used as the maximum length of an array-like value.
-     * See the [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength)
+     * See the [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
      * for more details.
      */
     var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
@@ -10766,14 +10766,14 @@ return jQuery;
      * `findLast`, `findLastIndex`, `findLastKey`, `findWhere`, `first`, `has`,
      * `identity`, `includes`, `indexOf`, `isArguments`, `isArray`, `isBoolean`,
      * `isDate`, `isElement`, `isEmpty`, `isEqual`, `isError`, `isFinite`,
-     * `isFunction`, `isMatch` , `isNative`, `isNaN`, `isNull`, `isNumber`,
+     * `isFunction`, `isMatch`, `isNative`, `isNaN`, `isNull`, `isNumber`,
      * `isObject`, `isPlainObject`, `isRegExp`, `isString`, `isUndefined`,
      * `isTypedArray`, `join`, `kebabCase`, `last`, `lastIndexOf`, `max`, `min`,
      * `noConflict`, `now`, `pad`, `padLeft`, `padRight`, `parseInt`, `pop`,
      * `random`, `reduce`, `reduceRight`, `repeat`, `result`, `runInContext`,
      * `shift`, `size`, `snakeCase`, `some`, `sortedIndex`, `sortedLastIndex`,
-     * `startsWith`, `template`, `trim`, `trimLeft`, `trimRight`, `trunc`,
-     * `unescape`, `uniqueId`, `value`, and `words`
+     * `startCase`, `startsWith`, `template`, `trim`, `trimLeft`, `trimRight`,
+     * `trunc`, `unescape`, `uniqueId`, `value`, and `words`
      *
      * The wrapper function `sample` will return a wrapped value when `n` is provided,
      * otherwise an unwrapped value is returned.
@@ -11586,7 +11586,7 @@ return jQuery;
       }
       // Handle "_.property" and "_.matches" style callback shorthands.
       return type == 'object'
-        ? baseMatches(func, !argCount)
+        ? baseMatches(func)
         : baseProperty(func + '');
     }
 
@@ -12207,10 +12207,9 @@ return jQuery;
      *
      * @private
      * @param {Object} source The object of property values to match.
-     * @param {boolean} [isCloned] Specify cloning the source object.
      * @returns {Function} Returns the new function.
      */
-    function baseMatches(source, isCloned) {
+    function baseMatches(source) {
       var props = keys(source),
           length = props.length;
 
@@ -12223,9 +12222,6 @@ return jQuery;
             return object != null && value === object[key] && hasOwnProperty.call(object, key);
           };
         }
-      }
-      if (isCloned) {
-        source = baseClone(source, true);
       }
       var values = Array(length),
           strictCompareFlags = Array(length);
@@ -13537,13 +13533,17 @@ return jQuery;
         var length = object.length,
             prereq = isLength(length) && isIndex(index, length);
       } else {
-        prereq = type == 'string' && index in value;
+        prereq = type == 'string' && index in object;
       }
       return prereq && object[index] === value;
     }
 
     /**
      * Checks if `value` is a valid array-like length.
+     *
+     * **Note:** This function is based on ES `ToLength`. See the
+     * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength)
+     * for more details.
      *
      * @private
      * @param {*} value The value to check.
@@ -15615,7 +15615,7 @@ return jQuery;
      * // => 'fred'
      */
     function findWhere(collection, source) {
-      return find(collection, matches(source));
+      return find(collection, baseMatches(source));
     }
 
     /**
@@ -15992,7 +15992,7 @@ return jQuery;
      * // => [36, 40] (iteration order is not guaranteed)
      */
     function pluck(collection, key) {
-      return map(collection, property(key));
+      return map(collection, baseProperty(key + ''));
     }
 
     /**
@@ -16363,7 +16363,7 @@ return jQuery;
      * // => ['barney', 'fred']
      */
     function where(collection, source) {
-      return filter(collection, matches(source));
+      return filter(collection, baseMatches(source));
     }
 
     /*------------------------------------------------------------------------*/
@@ -19008,7 +19008,7 @@ return jQuery;
      */
     var camelCase = createCompounder(function(result, word, index) {
       word = word.toLowerCase();
-      return index ? (result + word.charAt(0).toUpperCase() + word.slice(1)) : word;
+      return result + (index ? (word.charAt(0).toUpperCase() + word.slice(1)) : word);
     });
 
     /**
@@ -19359,14 +19359,39 @@ return jQuery;
      * _.snakeCase('Foo Bar');
      * // => 'foo_bar'
      *
-     * _.snakeCase('--foo-bar');
+     * _.snakeCase('fooBar');
      * // => 'foo_bar'
      *
-     * _.snakeCase('fooBar');
+     * _.snakeCase('--foo-bar');
      * // => 'foo_bar'
      */
     var snakeCase = createCompounder(function(result, word, index) {
       return result + (index ? '_' : '') + word.toLowerCase();
+    });
+
+    /**
+     * Converts `string` to start case.
+     * See [Wikipedia](https://en.wikipedia.org/wiki/Letter_case#Stylistic_or_specialised_usage)
+     * for more details.
+     *
+     * @static
+     * @memberOf _
+     * @category String
+     * @param {string} [string=''] The string to convert.
+     * @returns {string} Returns the start cased string.
+     * @example
+     *
+     * _.startCase('--foo-bar');
+     * // => 'Foo Bar'
+     *
+     * _.startCase('fooBar');
+     * // => 'Foo Bar'
+     *
+     * _.startCase('__foo_bar__');
+     * // => 'Foo Bar'
+     */
+    var startCase = createCompounder(function(result, word, index) {
+      return result + (index ? ' ' : '') + (word.charAt(0).toUpperCase() + word.slice(1));
     });
 
     /**
@@ -19628,7 +19653,7 @@ return jQuery;
       if (guard ? isIterateeCall(value, chars, guard) : chars == null) {
         return string.slice(trimmedLeftIndex(string), trimmedRightIndex(string) + 1);
       }
-      chars = baseToString(chars);
+      chars = (chars + '');
       return string.slice(charsLeftIndex(string, chars), charsRightIndex(string, chars) + 1);
     }
 
@@ -19659,7 +19684,7 @@ return jQuery;
       if (guard ? isIterateeCall(value, chars, guard) : chars == null) {
         return string.slice(trimmedLeftIndex(string))
       }
-      return string.slice(charsLeftIndex(string, baseToString(chars)));
+      return string.slice(charsLeftIndex(string, (chars + '')));
     }
 
     /**
@@ -19689,7 +19714,7 @@ return jQuery;
       if (guard ? isIterateeCall(value, chars, guard) : chars == null) {
         return string.slice(0, trimmedRightIndex(string) + 1)
       }
-      return string.slice(0, charsRightIndex(string, baseToString(chars)) + 1);
+      return string.slice(0, charsRightIndex(string, (chars + '')) + 1);
     }
 
     /**
@@ -19896,7 +19921,9 @@ return jQuery;
       if (guard && isIterateeCall(func, thisArg, guard)) {
         thisArg = null;
       }
-      return baseCallback(func, thisArg);
+      return isObjectLike(func)
+        ? matches(func)
+        : baseCallback(func, thisArg);
     }
 
     /**
@@ -19964,7 +19991,7 @@ return jQuery;
      * // => { 'user': 'barney', 'age': 36 }
      */
     function matches(source) {
-      return baseMatches(source, true);
+      return baseMatches(baseClone(source, true));
     }
 
     /**
@@ -20461,6 +20488,7 @@ return jQuery;
     lodash.some = some;
     lodash.sortedIndex = sortedIndex;
     lodash.sortedLastIndex = sortedLastIndex;
+    lodash.startCase = startCase;
     lodash.startsWith = startsWith;
     lodash.template = template;
     lodash.trim = trim;
@@ -20586,10 +20614,10 @@ return jQuery;
     // Add `LazyWrapper` methods for `_.pluck` and `_.where`.
     arrayEach(['pluck', 'where'], function(methodName, index) {
       var operationName = index ? 'filter' : 'map',
-          createCallback = index ? matches : property;
+          createCallback = index ? baseMatches : baseProperty;
 
       LazyWrapper.prototype[methodName] = function(value) {
-        return this[operationName](createCallback(value));
+        return this[operationName](createCallback(index ? value : (value + '')));
       };
     });
 
@@ -20787,7 +20815,7 @@ var StatsMiner = function (options) {
         'postsByHour': function (mediaArray) {
             return _.countBy(mediaArray, function (media) {
                 var date = new Date(media.created_time * 1000);
-                return ('0' + date.getHours()).slice(-2);
+                return date.getHours();
             });
         },
         'postsByDayOfWeek': function (mediaArray) {
@@ -20819,6 +20847,24 @@ var StatsMiner = function (options) {
                     }, 0);
                 })
                 .value();
+        },
+        'firstMedia': function (mediaArray) {
+            return _.min(mediaArray, function (media) {
+                return media.created_time;
+            });
+        },
+        'lastMedia': function (mediaArray) {
+            return _.max(mediaArray, function (media) {
+                return media.created_time;
+            });
+        },
+        'tags': function (mediaArray) {
+            return _(mediaArray).chain()
+                .pluck('tags')
+                .flatten()
+                .compact()
+                .countBy()
+                .value()
         }
     };
 
@@ -20832,11 +20878,22 @@ var StatsMiner = function (options) {
             return _.max([accumStatsValue, statsValue], function (media) {
                 return media && media.comments && media.comments.count;
             });
+        },
+        'firstMedia': function (accumStatsValue, statsValue) {
+            return _.min([accumStatsValue, statsValue], function (media) {
+                return media && media.created_time;
+            });
+        },
+        'lastMedia': function (accumStatsValue, statsValue) {
+            return _.max([accumStatsValue, statsValue], function (media) {
+                return media && media.created_time;
+            });
         }
     };
 
     this.options = _.defaults(options, {
         requestTimeout: 3 * 1000,
+        errorCallback: _.noop,
         stopCallback: _.noop,
         statsCallback: _.noop,
         statsFunctions: _.extend(statsFunctions, options.statsFunctions || {}),
@@ -20857,7 +20914,7 @@ var StatsMiner = function (options) {
 
     this.mediaFetchCallback = function (response) {
         if (response.meta.code !== 200) {
-            throw new Error('Instagram error!!!1' + JSON.stringify(response.meta));
+            return this.options.errorCallback(response);
         }
 
         if (!_.isEmpty(response.pagination)) {
@@ -20891,6 +20948,7 @@ var StatsMiner = function (options) {
 
     this.mining = function (options) {
         options = options || {};
+        options = _.merge(options, this.options.fetchFunctionOptions);
         this.options.fetchFunction(options, this.mediaFetchCallback.bind(this));
     }.bind(this);
 };

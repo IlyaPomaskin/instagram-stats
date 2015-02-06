@@ -127,6 +127,7 @@ var StatsMiner = function (options) {
 
     this.options = _.defaults(options, {
         requestTimeout: 3 * 1000,
+        errorCallback: _.noop,
         stopCallback: _.noop,
         statsCallback: _.noop,
         statsFunctions: _.extend(statsFunctions, options.statsFunctions || {}),
@@ -147,7 +148,7 @@ var StatsMiner = function (options) {
 
     this.mediaFetchCallback = function (response) {
         if (response.meta.code !== 200) {
-            throw new Error('Instagram error!!!1' + JSON.stringify(response.meta));
+            return this.options.errorCallback(response);
         }
 
         if (!_.isEmpty(response.pagination)) {
